@@ -1,0 +1,74 @@
+#!/usr/bin/env php
+<?php
+
+declare(strict_types=1);
+
+// CLI de testes/operação. Uso: php bin/mpesa <comando> [args]
+require __DIR__ . '/../bootstrap.php';
+
+use Woomoza\Mpesa\Client;
+use Woomoza\Mpesa\Exception\MpesaException;
+use Woomoza\Mpesa\Exception\UnknownOutcomeException;
+
+if (PHP_SAPI !== 'cli') {
+    http_response_code(404);
+    exit;
+}
+
+$usage = <<<TXT
+Uso: php bin/mpesa <comando> [args]
+  c2b <msisdn> <valor>            cobra ao cliente
+  b2c <msisdn> <valor>            paga ao cliente
+  b2b <shortcode> <valor>         paga a outra empresa
+  reversal <transactionId> [valor]  reverte (total se sem valor)
+  query <referencia>              estado (TransactionID, ConversationID ou ThirdPartyReference)
+  name <msisdn>                   nome (mascarado) do titular
+  all [msisdn] [valor]            testa todos os endpoints (só sandbox)
+
+TXT;
+
+[$cmd, $a, $b] = [$argv[1] ?? '', $argv[2] ?? null, $argv[3] ?? null];
+
+$print = static function (Woomoza\Mpesa\Response $r): void {
+    printf("  HTTP %d | %s | %s | TxID %s | status %s%s\n", $r->httpStatus, $r->code ?: '-', $r->message(), $r->transactionId ?: '-', $r->status ?: '-', $r->customerName ? ' | nome ' . $r->customerName : '');
+};
+
+try {
+    $m = Client::fromFile(MPESA_CONFIG);
+    switch ($cmd) {
+        case 'c2b':      $a && $b ? $print($m->c2b($b, $a)) : exit($usage); break;
+        case 'b2c':      $a && $b ? $print($m->b2c($b, $a)) : exit($usage); break;
+        case 'b2b':      $a && $b ? $print($m->b2b($b, $a)) : exit($usage); break;
+        case 'reversal': $a ? $print($m->reversal($a, $b)) : exit($usage); break;
+        case 'query':    $a ? $print($m->query($a)) : exit($usage); break;
+        case 'name':     $a ? $print($m->queryCustomerName($a)) : exit($usage); break;
+        case 'all':
+            if (!$m->config()->isSandbox()) {
+                exit("Recusado: 'all' só corre no sandbox.\n");
+            }
+            $msisdn = $a ?? '258841234567';
+            $amount = $b ?? '10';
+            $run = static function (string $name, callable $fn) use ($print) {
+                echo $name . "\n";
+                try { $r = $fn(); $print($r); return $r; }
+                catch (UnknownOutcomeException $e) { echo '  INCERTO: ' . $e->getMessage() . "\n"; return null; }
+                catch (MpesaException $e) { echo '  ERRO: ' . $e->getMessage() . "\n"; return null; }
+            };
+            $c  = $run('C2B', fn() => $m->c2b($amount, $msisdn));
+            $tx = $c?->transactionId ?? '';
+            $run('QUERY', fn() => $m->query($tx ?: 'x'));
+            $run('B2C', fn() => $m->b2c($amount, $msisdn));
+            $run('B2B', fn() => $m->b2b($amount, '979797'));
+            $run('REVERSAL', fn() => $m->reversal($tx, $amount));
+            $run('QUERY CUSTOMER NAME', fn() => $m->queryCustomerName('258843330333'));
+            break;
+        default:
+            echo $usage;
+    }
+} catch (UnknownOutcomeException $e) {
+    fwrite(STDERR, "INCERTO: {$e->getMessage()}\n");
+    exit(2);
+} catch (MpesaException $e) {
+    fwrite(STDERR, 'Erro: ' . $e->getMessage() . "\n");
+    exit(1);
+}

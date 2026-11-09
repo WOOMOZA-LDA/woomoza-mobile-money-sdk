@@ -1,0 +1,8 @@
+vendor/
+composer.lock.bak
+config/config.php
+config/*.bak
+storage/*.log
+storage/callbacks/
+.phpunit.cache/
+.phpunit.result.cache

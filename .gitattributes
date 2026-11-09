@@ -1,0 +1,3 @@
+* text=auto eol=lf
+*.php text eol=lf
+bin/mpesa text eol=lf
