@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace Woomoza\Mpesa\Http;
+namespace Woomoza\MobileMoney\Http;
 
-use Woomoza\Mpesa\Exception\NetworkException;
+use Woomoza\MobileMoney\Exception\NetworkException;
 
 final class CurlHttpClient implements HttpClient
 {

@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace Woomoza\Mpesa\Exception;
+namespace Woomoza\MobileMoney\Exception;
 
 /** Configuração em falta ou inválida (chaves, host, credenciais de exemplo em produção). */
-class ConfigException extends MpesaException
+class ConfigException extends MobileMoneyException
 {
 }

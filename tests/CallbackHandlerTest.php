@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace Woomoza\Mpesa\Tests;
+namespace Woomoza\MobileMoney\Tests;
 
 use PHPUnit\Framework\TestCase as Base;
-use Woomoza\Mpesa\Callback\CallbackHandler;
+use Woomoza\MobileMoney\Mpesa\Callback\CallbackHandler;
 
 final class CallbackHandlerTest extends Base
 {

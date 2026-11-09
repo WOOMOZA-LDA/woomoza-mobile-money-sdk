@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace Woomoza\Mpesa\Callback;
+namespace Woomoza\MobileMoney\Mpesa\Callback;
 
-use Woomoza\Mpesa\Response;
+use Woomoza\MobileMoney\Mpesa\Response;
 
 /**
  * Valida e regista o callback assíncrono da Vodacom.

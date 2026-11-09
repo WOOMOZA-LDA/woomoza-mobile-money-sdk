@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace Woomoza\Mpesa\Tests;
+namespace Woomoza\MobileMoney\Tests;
 
 use PHPUnit\Framework\TestCase as Base;
-use Woomoza\Mpesa\Config;
+use Woomoza\MobileMoney\Mpesa\Config;
 
 abstract class TestCase extends Base
 {
@@ -33,8 +33,8 @@ abstract class TestCase extends Base
         ]);
     }
 
-    protected static function ok(string $json): \Woomoza\Mpesa\Http\HttpResponse
+    protected static function ok(string $json): \Woomoza\MobileMoney\Http\HttpResponse
     {
-        return new \Woomoza\Mpesa\Http\HttpResponse(200, $json);
+        return new \Woomoza\MobileMoney\Http\HttpResponse(200, $json);
     }
 }

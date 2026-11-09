@@ -1,7 +1,14 @@
 {
-    "name": "woomoza/mpesa",
-    "description": "SDK M-Pesa Moçambique (Vodacom) independente: C2B, B2C, B2B, Reversal, Query, Query Customer Name e callbacks.",
+    "name": "woomoza/mobile-money-sdk",
+    "description": "Unofficial PHP SDK for Mozambique mobile money wallets (M-Pesa first). No runtime dependencies.",
     "type": "library",
+    "license": "MIT",
+    "keywords": ["mpesa", "m-pesa", "mobile-money", "mozambique", "vodacom", "payments", "sdk"],
+    "homepage": "https://github.com/WOOMOZA-LDA/woomoza-mobile-money-sdk",
+    "support": {
+        "issues": "https://github.com/WOOMOZA-LDA/woomoza-mobile-money-sdk/issues",
+        "source": "https://github.com/WOOMOZA-LDA/woomoza-mobile-money-sdk"
+    },
     "require": {
         "php": ">=8.1",
         "ext-curl": "*",
@@ -14,12 +21,12 @@
     },
     "autoload": {
         "psr-4": {
-            "Woomoza\\Mpesa\\": "src/"
+            "Woomoza\\MobileMoney\\": "src/"
         }
     },
     "autoload-dev": {
         "psr-4": {
-            "Woomoza\\Mpesa\\Tests\\": "tests/"
+            "Woomoza\\MobileMoney\\Tests\\": "tests/"
         }
     },
     "scripts": {

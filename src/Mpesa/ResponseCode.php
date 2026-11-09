@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Woomoza\Mpesa;
+namespace Woomoza\MobileMoney\Mpesa;
 
 /** Códigos de resposta da documentação M-Pesa (tabela "Response Codes & Descriptions"). */
 enum ResponseCode: string

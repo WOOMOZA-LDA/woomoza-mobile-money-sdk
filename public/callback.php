@@ -5,8 +5,8 @@ declare(strict_types=1);
 // Endpoint do "Asynchronous Response URL" registado no portal M-Pesa.
 require __DIR__ . '/../bootstrap.php';
 
-use Woomoza\Mpesa\Callback\CallbackHandler;
-use Woomoza\Mpesa\Config;
+use Woomoza\MobileMoney\Mpesa\Callback\CallbackHandler;
+use Woomoza\MobileMoney\Mpesa\Config;
 
 $allowed = [];
 try {

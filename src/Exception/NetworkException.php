@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace Woomoza\Mpesa\Exception;
+namespace Woomoza\MobileMoney\Exception;
 
 /** Falha de transporte (DNS, TLS, timeout, ligação recusada). */
-class NetworkException extends MpesaException
+class NetworkException extends MobileMoneyException
 {
 }

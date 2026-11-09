@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace Woomoza\Mpesa\Exception;
+namespace Woomoza\MobileMoney\Exception;
 
-use Woomoza\Mpesa\Response;
+use Woomoza\MobileMoney\Mpesa\Response;
 
 /** A API respondeu com um código de erro (lançada por Response::throwIfFailed()). */
-class ApiException extends MpesaException
+class ApiException extends MobileMoneyException
 {
     public function __construct(public readonly Response $response)
     {

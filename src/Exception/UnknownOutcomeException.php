@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Woomoza\Mpesa\Exception;
+namespace Woomoza\MobileMoney\Exception;
 
 /**
  * Um pedido que MUDA estado (c2b, b2c, b2b, reversal) falhou no transporte ou o gateway

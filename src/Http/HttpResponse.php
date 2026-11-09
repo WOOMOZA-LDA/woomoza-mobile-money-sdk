@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Woomoza\Mpesa\Http;
+namespace Woomoza\MobileMoney\Http;
 
 final class HttpResponse
 {

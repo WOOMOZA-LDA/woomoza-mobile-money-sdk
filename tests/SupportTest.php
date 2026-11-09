@@ -2,16 +2,16 @@
 
 declare(strict_types=1);
 
-namespace Woomoza\Mpesa\Tests;
+namespace Woomoza\MobileMoney\Tests;
 
 use PHPUnit\Framework\Attributes\DataProvider;
-use Woomoza\Mpesa\Config;
-use Woomoza\Mpesa\Exception\ConfigException;
-use Woomoza\Mpesa\Exception\ValidationException;
-use Woomoza\Mpesa\Response;
-use Woomoza\Mpesa\Support\Amount;
-use Woomoza\Mpesa\Support\Msisdn;
-use Woomoza\Mpesa\Support\Reference;
+use Woomoza\MobileMoney\Mpesa\Config;
+use Woomoza\MobileMoney\Exception\ConfigException;
+use Woomoza\MobileMoney\Exception\ValidationException;
+use Woomoza\MobileMoney\Mpesa\Response;
+use Woomoza\MobileMoney\Support\Amount;
+use Woomoza\MobileMoney\Mpesa\Msisdn;
+use Woomoza\MobileMoney\Support\Reference;
 
 final class SupportTest extends TestCase
 {

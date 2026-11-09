@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace Woomoza\Mpesa\Support;
+namespace Woomoza\MobileMoney\Support;
 
-use Woomoza\Mpesa\Exception\ValidationException;
+use Woomoza\MobileMoney\Exception\ValidationException;
 
 /**
  * Valor monetário como string decimal (evita erros de arredondamento de float).

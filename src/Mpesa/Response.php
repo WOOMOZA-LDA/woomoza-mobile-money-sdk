@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace Woomoza\Mpesa;
+namespace Woomoza\MobileMoney\Mpesa;
 
-use Woomoza\Mpesa\Exception\ApiException;
+use Woomoza\MobileMoney\Exception\ApiException;
 
 /** Resposta normalizada (síncrona ou corpo de um callback assíncrono). Imutável. */
 final class Response

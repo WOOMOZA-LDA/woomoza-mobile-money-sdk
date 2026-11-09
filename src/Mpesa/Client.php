@@ -2,16 +2,15 @@
 
 declare(strict_types=1);
 
-namespace Woomoza\Mpesa;
+namespace Woomoza\MobileMoney\Mpesa;
 
-use Woomoza\Mpesa\Exception\ConfigException;
-use Woomoza\Mpesa\Exception\NetworkException;
-use Woomoza\Mpesa\Exception\UnknownOutcomeException;
-use Woomoza\Mpesa\Http\CurlHttpClient;
-use Woomoza\Mpesa\Http\HttpClient;
-use Woomoza\Mpesa\Support\Amount;
-use Woomoza\Mpesa\Support\Msisdn;
-use Woomoza\Mpesa\Support\Reference;
+use Woomoza\MobileMoney\Exception\ConfigException;
+use Woomoza\MobileMoney\Exception\NetworkException;
+use Woomoza\MobileMoney\Exception\UnknownOutcomeException;
+use Woomoza\MobileMoney\Http\CurlHttpClient;
+use Woomoza\MobileMoney\Http\HttpClient;
+use Woomoza\MobileMoney\Support\Amount;
+use Woomoza\MobileMoney\Support\Reference;
 
 /**
  * Cliente M-Pesa Moçambique (Vodacom). Sem dependências externas.

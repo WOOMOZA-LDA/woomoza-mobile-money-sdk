@@ -2,16 +2,16 @@
 
 declare(strict_types=1);
 
-namespace Woomoza\Mpesa\Tests;
+namespace Woomoza\MobileMoney\Tests;
 
-use Woomoza\Mpesa\Client;
-use Woomoza\Mpesa\Exception\ApiException;
-use Woomoza\Mpesa\Exception\ConfigException;
-use Woomoza\Mpesa\Exception\NetworkException;
-use Woomoza\Mpesa\Exception\UnknownOutcomeException;
-use Woomoza\Mpesa\Exception\ValidationException;
-use Woomoza\Mpesa\Http\HttpResponse;
-use Woomoza\Mpesa\ResponseCode;
+use Woomoza\MobileMoney\Mpesa\Client;
+use Woomoza\MobileMoney\Exception\ApiException;
+use Woomoza\MobileMoney\Exception\ConfigException;
+use Woomoza\MobileMoney\Exception\NetworkException;
+use Woomoza\MobileMoney\Exception\UnknownOutcomeException;
+use Woomoza\MobileMoney\Exception\ValidationException;
+use Woomoza\MobileMoney\Http\HttpResponse;
+use Woomoza\MobileMoney\Mpesa\ResponseCode;
 
 final class ClientTest extends TestCase
 {

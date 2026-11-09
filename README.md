@@ -1,17 +1,27 @@
-# woomoza-mpesa-sdk
+# woomoza-mobile-money-sdk
 
-Pacote Composer: `woomoza/mpesa` · Namespace: `Woomoza\Mpesa`
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
-SDK PHP independente para a API M-Pesa de Moçambique (Vodacom). Sem dependências de runtime
+SDK PHP **open source e não oficial** para carteiras móveis de Moçambique. Começa com o **M-Pesa (Vodacom)**;
+o e-Mola e o mKesh poderão seguir-se como drivers próprios. É uma biblioteca cliente, **não um serviço de
+pagamentos**: usa as suas próprias credenciais do operador. Sem dependências de runtime
 (só `ext-curl`, `ext-openssl`, `ext-json`), PHP ≥ 8.1.
 
-Endpoints: **C2B**, **B2C**, **B2B**, **Reversal**, **Query Transaction Status**, **Query Customer Name** e
+Pacote Composer: `woomoza/mobile-money-sdk` · Namespace: `Woomoza\MobileMoney`
+
+> **Aviso:** este projeto não é afiliado, patrocinado nem aprovado pela Vodacom, Movitel ou Tmcel.
+> M-Pesa, e-Mola e mKesh são marcas dos respetivos titulares. O software é fornecido «tal como está»
+> (ver [LICENSE](LICENSE)): testa-o no sandbox e é responsável pelas suas credenciais, pelas transações
+> que fizer e pelo cumprimento das regras do operador.
+
+Driver M-Pesa: **C2B**, **B2C**, **B2B**, **Reversal**, **Query Transaction Status**, **Query Customer Name** e
 tratamento seguro do **callback assíncrono**.
 
 ## Estrutura
 
 ```
-src/            o SDK (Client, Config, Response, ResponseCode, Exception/, Http/, Support/, Callback/)
+src/Exception, src/Http, src/Support   partes comuns a qualquer carteira
+src/Mpesa/      driver M-Pesa: Client, Config, Response, ResponseCode, Msisdn, Callback/
 public/         só callback.php (o único ficheiro que deve estar exposto na web)
 bin/mpesa       CLI de testes e operação
 config/         config.php (segredos, fora do git) e config.example.php
@@ -35,8 +45,8 @@ Em **produção** o `Config` recusa: `verify_ssl=false` e as credenciais de exem
 ## Uso
 
 ```php
-use Woomoza\Mpesa\Client;
-use Woomoza\Mpesa\Exception\UnknownOutcomeException;
+use Woomoza\MobileMoney\Mpesa\Client;
+use Woomoza\MobileMoney\Exception\UnknownOutcomeException;
 
 $mpesa = Client::fromFile(__DIR__ . '/config/config.php');
 
@@ -107,7 +117,7 @@ As portas podem ser sobrepostas no config (`'ports' => ['c2b' => 18352, ...]`).
 
 ## Exceções
 
-`MpesaException` (base) → `ConfigException`, `ValidationException` (nada foi enviado), `NetworkException` →
+`MobileMoneyException` (base) → `ConfigException`, `ValidationException` (nada foi enviado), `NetworkException` →
 `UnknownOutcomeException`, e `ApiException` (de `throwIfFailed()`).
 
 ## Callback assíncrono
@@ -192,6 +202,12 @@ Com `--json`, a saída de cada pedido é `{"success":..., "http":..., "code":...
 composer test    # PHPUnit
 composer stan    # PHPStan nível 6
 ```
+
+## Contribuir, segurança e licença
+
+- [CONTRIBUTING.md](CONTRIBUTING.md): como contribuir e correr os testes.
+- [SECURITY.md](SECURITY.md): como reportar vulnerabilidades (em privado).
+- [LICENSE](LICENSE): MIT.
 
 ## Notas sobre a API
 

@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace Woomoza\Mpesa\Exception;
+namespace Woomoza\MobileMoney\Exception;
 
 /** Parâmetro inválido detetado localmente (MSISDN, valor, referência). Nada foi enviado. */
-class ValidationException extends MpesaException
+class ValidationException extends MobileMoneyException
 {
 }

@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace Woomoza\Mpesa\Tests;
+namespace Woomoza\MobileMoney\Tests;
 
-use Woomoza\Mpesa\Exception\NetworkException;
-use Woomoza\Mpesa\Http\HttpClient;
-use Woomoza\Mpesa\Http\HttpResponse;
+use Woomoza\MobileMoney\Exception\NetworkException;
+use Woomoza\MobileMoney\Http\HttpClient;
+use Woomoza\MobileMoney\Http\HttpResponse;
 
 /** Transporte falso: devolve respostas em fila e guarda os pedidos feitos. */
 final class FakeHttpClient implements HttpClient

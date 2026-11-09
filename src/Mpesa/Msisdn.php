@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace Woomoza\Mpesa\Support;
+namespace Woomoza\MobileMoney\Mpesa;
 
-use Woomoza\Mpesa\Exception\ValidationException;
+use Woomoza\MobileMoney\Exception\ValidationException;
 
 final class Msisdn
 {

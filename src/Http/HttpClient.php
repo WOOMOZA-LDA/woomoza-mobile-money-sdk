@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace Woomoza\Mpesa\Http;
+namespace Woomoza\MobileMoney\Http;
 
-use Woomoza\Mpesa\Exception\NetworkException;
+use Woomoza\MobileMoney\Exception\NetworkException;
 
 /** Transporte HTTP. Substituível (testes, proxy, PSR-18 via adaptador). */
 interface HttpClient

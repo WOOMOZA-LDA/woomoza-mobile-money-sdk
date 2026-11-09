@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace Woomoza\Mpesa;
+namespace Woomoza\MobileMoney\Mpesa;
 
-use Woomoza\Mpesa\Exception\ConfigException;
+use Woomoza\MobileMoney\Exception\ConfigException;
 
 /**
  * Configuração imutável. Os segredos são privados e mascarados em var_dump/print_r.
