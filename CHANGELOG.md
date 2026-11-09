@@ -7,4 +7,4 @@
 - Transporte injetável (`HttpClient`), retry com backoff + jitter só em consultas, logger opcional com MSISDN mascarado.
 - `Config` com segredos privados e mascarados, portas configuráveis, validações para produção.
 - `CallbackHandler` com validação, filtro de IP, idempotência e log sem headers.
-- CLI `bin/mpesa`; testes PHPUnit (49) e PHPStan nível 6.
+- CLI `bin/mpesa` com opções (`--config`, `--ref`, `--tp`, `--timeout`, `--json`, `-v`, `--yes`), comando `config`, proteção em produção e códigos de saída; testes PHPUnit (49) e PHPStan nível 6.

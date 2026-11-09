@@ -3,56 +3,192 @@
 
 declare(strict_types=1);
 
-// CLI de testes/operação. Uso: php bin/mpesa <comando> [args]
+// CLI de testes/operação do SDK. Uso: php bin/mpesa <comando> [args] [opções]
 require __DIR__ . '/../bootstrap.php';
 
 use Woomoza\Mpesa\Client;
+use Woomoza\Mpesa\Config;
 use Woomoza\Mpesa\Exception\MpesaException;
 use Woomoza\Mpesa\Exception\UnknownOutcomeException;
+use Woomoza\Mpesa\Response;
 
 if (PHP_SAPI !== 'cli') {
     http_response_code(404);
     exit;
 }
 
-$usage = <<<TXT
-Uso: php bin/mpesa <comando> [args]
-  c2b <msisdn> <valor>            cobra ao cliente
-  b2c <msisdn> <valor>            paga ao cliente
-  b2b <shortcode> <valor>         paga a outra empresa
-  reversal <transactionId> [valor]  reverte (total se sem valor)
-  query <referencia>              estado (TransactionID, ConversationID ou ThirdPartyReference)
-  name <msisdn>                   nome (mascarado) do titular
-  all [msisdn] [valor]            testa todos os endpoints (só sandbox)
+const USAGE = <<<TXT
+Uso: php bin/mpesa <comando> [args] [opções]
+
+Comandos
+  c2b <msisdn> <valor>              cobra ao cliente (Customer → Business)
+  b2c <msisdn> <valor>              paga ao cliente  (Business → Customer)
+  b2b <shortcode> <valor>           paga a outra empresa (Business → Business)
+  reversal <transactionId> [valor]  reverte; sem valor = reversão total
+  query <referencia>                estado (TransactionID, ConversationID ou ThirdPartyReference)
+  name <msisdn>                     nome (mascarado) do titular da carteira
+  all [msisdn] [valor]              testa todos os endpoints (só sandbox)
+  config                            mostra a configuração ativa (sem segredos) e as portas
+  help                              esta ajuda
+
+Opções
+  --config=FICHEIRO   ficheiro de configuração (padrão: config/config.php)
+  --ref=TEXTO         TransactionReference (c2b, b2c, b2b); 1–20, só letras e números; padrão: gerada
+  --tp=TEXTO          ThirdPartyReference (todos); padrão: gerada
+  --timeout=SEG       timeout por pedido (sobrepõe a config)
+  --json              resultado em JSON (uma linha por pedido), para scripts
+  -v, --verbose       mostra os pedidos e respostas (MSISDN mascarado, sem segredos)
+  --yes               confirma operações que movem dinheiro FORA do sandbox
+
+Códigos de saída
+  0 sucesso   1 erro da API ou de validação   2 resultado incerto (consulte `query`)   3 uso inválido
 
 TXT;
 
-[$cmd, $a, $b] = [$argv[1] ?? '', $argv[2] ?? null, $argv[3] ?? null];
+/** Separa argumentos posicionais de opções (--chave=valor, --flag, -v). */
+function parseArgs(array $argv): array
+{
+    $pos = [];
+    $opt = [];
+    foreach (array_slice($argv, 1) as $arg) {
+        if ($arg === '-v') {
+            $opt['verbose'] = true;
+        } elseif (str_starts_with($arg, '--')) {
+            [$k, $v] = array_pad(explode('=', substr($arg, 2), 2), 2, true);
+            $opt[$k] = $v;
+        } else {
+            $pos[] = $arg;
+        }
+    }
+    return [$pos, $opt];
+}
 
-$print = static function (Woomoza\Mpesa\Response $r): void {
-    printf("  HTTP %d | %s | %s | TxID %s | status %s%s\n", $r->httpStatus, $r->code ?: '-', $r->message(), $r->transactionId ?: '-', $r->status ?: '-', $r->customerName ? ' | nome ' . $r->customerName : '');
+/** Logger mínimo (duck-typed como PSR-3) que escreve em STDERR. */
+function stderrLogger(): object
+{
+    return new class {
+        public function log(string $level, string $message, array $context = []): void
+        {
+            fwrite(STDERR, sprintf("[%s] %s %s\n", $level, $message, json_encode($context, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES)));
+        }
+    };
+}
+
+function fail(string $msg, int $code): never
+{
+    fwrite(STDERR, $msg . "\n");
+    exit($code);
+}
+
+[$pos, $opt] = parseArgs($argv);
+$cmd  = $pos[0] ?? 'help';
+$a    = $pos[1] ?? null;
+$b    = $pos[2] ?? null;
+$json = isset($opt['json']);
+$ref  = isset($opt['ref']) && $opt['ref'] !== true ? (string) $opt['ref'] : null;
+$tp   = isset($opt['tp']) && $opt['tp'] !== true ? (string) $opt['tp'] : null;
+
+if (in_array($cmd, ['help', '-h', '--help'], true) || isset($opt['help'])) {
+    echo USAGE;
+    exit(0);
+}
+
+$needs = ['c2b' => 2, 'b2c' => 2, 'b2b' => 2, 'reversal' => 1, 'query' => 1, 'name' => 1];
+if (isset($needs[$cmd]) && count($pos) - 1 < $needs[$cmd]) {
+    fail("Faltam argumentos para '$cmd'.\n\n" . USAGE, 3);
+}
+if (!isset($needs[$cmd]) && !in_array($cmd, ['all', 'config'], true)) {
+    fail("Comando desconhecido: $cmd\n\n" . USAGE, 3);
+}
+
+$print = static function (Response $r) use ($json): void {
+    if ($json) {
+        echo json_encode($r->toArray(), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) . "\n";
+        return;
+    }
+    printf(
+        "  HTTP %d | %s | %s | TxID %s | status %s | tp %s%s\n",
+        $r->httpStatus,
+        $r->code ?: '-',
+        $r->message(),
+        $r->transactionId ?: '-',
+        $r->status ?: '-',
+        $r->thirdPartyReference ?: '-',
+        $r->customerName !== '' ? ' | nome ' . $r->customerName : ''
+    );
 };
 
 try {
-    $m = Client::fromFile(MPESA_CONFIG);
+    // Config do ficheiro (+ sobreposições da linha de comandos).
+    $file = isset($opt['config']) && $opt['config'] !== true ? (string) $opt['config'] : MPESA_CONFIG;
+    if (!is_file($file)) {
+        fail("Ficheiro de configuração não encontrado: $file\nCrie config/config.php a partir de config/config.example.php ou use --config=FICHEIRO.", 3);
+    }
+    $arr = require $file;
+    if (isset($opt['timeout'])) {
+        $arr['timeout'] = (int) $opt['timeout'];
+    }
+    $cfg = new Config($arr);
+    $m   = new Client($cfg, null, isset($opt['verbose']) ? stderrLogger() : null);
+
+    if ($cmd === 'config') {
+        $info = [
+            'ficheiro' => realpath($file) ?: $file, 'host' => $cfg->apiHost(), 'sandbox' => $cfg->isSandbox(),
+            'service_provider_code' => $cfg->serviceProviderCode(), 'origin' => $cfg->origin(),
+            'initiator_identifier' => $cfg->initiatorIdentifier() !== '' ? 'definido' : 'vazio',
+            'security_credential' => $cfg->securityCredential() !== '' ? 'definido' : 'vazio',
+            'timeout' => $cfg->timeout(), 'retries' => $cfg->retries(), 'verify_ssl' => $cfg->verifySsl(),
+            'portas' => array_combine(array_keys(Config::DEFAULT_PORTS), array_map(fn($e) => $cfg->port($e), array_keys(Config::DEFAULT_PORTS))),
+            'callback_allowed_ips' => $cfg->callbackAllowedIps(),
+        ];
+        // O bearer só prova que a chave pública e a api_key são válidas; nunca é mostrado.
+        try { $cfg->bearerToken(); $info['credenciais'] = 'api_key/public_key OK (token gerado)'; }
+        catch (MpesaException $e) { $info['credenciais'] = 'ERRO: ' . $e->getMessage(); }
+        echo $json ? json_encode($info, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT) . "\n" : print_r($info, true);
+        exit(0);
+    }
+
+    // Proteção: fora do sandbox, operações que movem dinheiro exigem --yes.
+    if (!$cfg->isSandbox() && in_array($cmd, ['c2b', 'b2c', 'b2b', 'reversal'], true) && !isset($opt['yes'])) {
+        fail("Host de PRODUÇÃO ({$cfg->apiHost()}): '$cmd' move dinheiro real.\nRepita com --yes para confirmar.", 3);
+    }
+
+    $exit = 0;
+    $track = static function (Response $r) use ($print, &$exit): Response {
+        $print($r);
+        if (!$r->isSuccess()) {
+            $exit = 1;
+        }
+        return $r;
+    };
+
     switch ($cmd) {
-        case 'c2b':      $a && $b ? $print($m->c2b($b, $a)) : exit($usage); break;
-        case 'b2c':      $a && $b ? $print($m->b2c($b, $a)) : exit($usage); break;
-        case 'b2b':      $a && $b ? $print($m->b2b($b, $a)) : exit($usage); break;
-        case 'reversal': $a ? $print($m->reversal($a, $b)) : exit($usage); break;
-        case 'query':    $a ? $print($m->query($a)) : exit($usage); break;
-        case 'name':     $a ? $print($m->queryCustomerName($a)) : exit($usage); break;
+        case 'c2b':      $track($m->c2b((string) $b, (string) $a, $ref, $tp)); break;
+        case 'b2c':      $track($m->b2c((string) $b, (string) $a, $ref, $tp)); break;
+        case 'b2b':      $track($m->b2b((string) $b, (string) $a, $ref, $tp)); break;
+        case 'reversal': $track($m->reversal((string) $a, $b, $tp)); break;
+        case 'query':    $track($m->query((string) $a, $tp)); break;
+        case 'name':     $track($m->queryCustomerName((string) $a, $tp)); break;
         case 'all':
-            if (!$m->config()->isSandbox()) {
-                exit("Recusado: 'all' só corre no sandbox.\n");
+            if (!$cfg->isSandbox()) {
+                fail("Recusado: 'all' só corre no sandbox.", 3);
             }
             $msisdn = $a ?? '258841234567';
             $amount = $b ?? '10';
-            $run = static function (string $name, callable $fn) use ($print) {
-                echo $name . "\n";
-                try { $r = $fn(); $print($r); return $r; }
-                catch (UnknownOutcomeException $e) { echo '  INCERTO: ' . $e->getMessage() . "\n"; return null; }
-                catch (MpesaException $e) { echo '  ERRO: ' . $e->getMessage() . "\n"; return null; }
+            $run = static function (string $name, callable $fn) use ($track, $json, &$exit) {
+                if (!$json) {
+                    echo $name . "\n";
+                }
+                try {
+                    return $track($fn());
+                } catch (UnknownOutcomeException $e) {
+                    echo ($json ? json_encode(['step' => $name, 'unknown_outcome' => $e->thirdPartyReference]) : '  INCERTO: ' . $e->getMessage()) . "\n";
+                    $exit = max($exit, 2);
+                } catch (MpesaException $e) {
+                    echo ($json ? json_encode(['step' => $name, 'error' => $e->getMessage()]) : '  ERRO: ' . $e->getMessage()) . "\n";
+                    $exit = max($exit, 1);
+                }
+                return null;
             };
             $c  = $run('C2B', fn() => $m->c2b($amount, $msisdn));
             $tx = $c?->transactionId ?? '';
@@ -62,13 +198,10 @@ try {
             $run('REVERSAL', fn() => $m->reversal($tx, $amount));
             $run('QUERY CUSTOMER NAME', fn() => $m->queryCustomerName('258843330333'));
             break;
-        default:
-            echo $usage;
     }
+    exit($exit);
 } catch (UnknownOutcomeException $e) {
-    fwrite(STDERR, "INCERTO: {$e->getMessage()}\n");
-    exit(2);
+    fail("INCERTO: {$e->getMessage()}", 2);
 } catch (MpesaException $e) {
-    fwrite(STDERR, 'Erro: ' . $e->getMessage() . "\n");
-    exit(1);
+    fail('Erro: ' . $e->getMessage(), 1);
 }
